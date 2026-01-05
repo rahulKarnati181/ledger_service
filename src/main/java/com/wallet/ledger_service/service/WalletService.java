@@ -37,7 +37,8 @@ public class WalletService {
                 merchantId.isBlank()||currency.isBlank()){
             throw new IllegalArgumentException("MerchantId or currency not present");
         }
-        Optional <Account> accountcheck =accountRepository.findActiveByMerchantIdAndCurrency(merchantId, currency);
+        Optional <Account> accountcheck =accountRepository.
+                findActiveByMerchantIdAndCurrency(merchantId, currency);
         if(accountcheck.isPresent()){
             throw new ConflictException("Account already exists");
         }
@@ -132,7 +133,8 @@ public class WalletService {
         return creditDto;
     }
 
-    public CreditDto debit(String accountId,BigDecimal amount , String referenceType,
+    public CreditDto debit(String accountId,BigDecimal amount ,
+                           String referenceType,
                            String referenceId){
         if(amount.compareTo(BigDecimal.ZERO )<=0 || referenceId==null||
                 referenceId.isBlank()||referenceType==null||referenceType.isBlank()
@@ -169,7 +171,7 @@ public class WalletService {
         entry2.setAccountId(PLATFORM_ACCOUNT_ID);
         entry2.setCounterpartyAccountId(accountId);
         entry2.setDirection(LedgerEntry.moneyDirection.CREDIT);
-        entry2.setType(LedgerEntry.moneyType.PAYMENT);
+        entry2.setType(LedgerEntry.moneyType.PAYOUT);
         entry2.setAmount(amount);
         entry2.setReferenceType(referenceType);
         entry2.setReferenceId(referenceId);
@@ -222,6 +224,14 @@ public class WalletService {
         }
         return(entryDtos);
     }
+
+    public Optional<LedgerEntry> findCreditForPaymentIntent
+            (String accountId,String paymentIntentId){
+        return (ledgerEntryRepository.findByAccountIdAndReferenceTypeAndReferenceIdAndDirection(
+                accountId,"PAYMENT_INTENT",paymentIntentId, LedgerEntry.moneyDirection.CREDIT
+        ));
+    }
+
 
 
 }

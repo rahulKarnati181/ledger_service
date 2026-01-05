@@ -7,10 +7,10 @@ import java.util.*;
 
 
 
-public class InMemoryLedgerEntryRepository implements LedgerEntryRepository {
+public class InMemoryLedgerEntryRepository  {
     private final Map<String, List<LedgerEntry>> accounts = new HashMap<>();
 
-    @Override
+
     public void saveAll(List<LedgerEntry> entries) {
         for(int i=0;i<entries.size();i++) {
             LedgerEntry entry = entries.get(i);
@@ -25,7 +25,7 @@ public class InMemoryLedgerEntryRepository implements LedgerEntryRepository {
         }
     }
 
-    @Override
+
     public List<LedgerEntry> findByAccountId(String accountId,int page,int size){
         List<LedgerEntry> entries = accounts.get(accountId);
         if(entries == null) {

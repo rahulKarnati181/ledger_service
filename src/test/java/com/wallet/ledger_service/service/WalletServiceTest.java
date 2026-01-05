@@ -23,13 +23,7 @@ public class WalletServiceTest {
     private  LedgerEntryRepository ledgerEntryRepository;
     private  WalletService walletService;
 
-    @BeforeEach
-    void setUp(){
-        accountRepository=new InMemoryAccountRepository();
-        ledgerEntryRepository=new InMemoryLedgerEntryRepository();
-        walletService=new WalletService(accountRepository,
-                ledgerEntryRepository);
-    }
+
 
     @Test
     void checkCreditAndDebitBalanceThenLedgerEntry(){

@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class JpaLedgerEntryRepository implements LedgerEntryRepository {
@@ -20,6 +21,18 @@ public class JpaLedgerEntryRepository implements LedgerEntryRepository {
     public void saveAll(List<LedgerEntry> entries){
         ledgerEntryJpaRepository.saveAll(entries);
     }
+
+    @Override
+    public Optional<LedgerEntry> findByAccountIdAndReferenceTypeAndReferenceIdAndDirection(
+            String accountId,
+            String referenceType,
+            String referenceId,
+            LedgerEntry.moneyDirection direction
+    ){
+        return(ledgerEntryJpaRepository.findByAccountIdAndReferenceTypeAndReferenceIdAndDirection
+                (accountId, referenceType, referenceId, direction));
+    }
+
 
     @Override
     public List<LedgerEntry> findByAccountId(String accountId,int page,int size){

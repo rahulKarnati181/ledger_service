@@ -23,6 +23,7 @@ public class JpaAccountRepository implements AccountRepository {
         return(accountJpaRepository.findById(accountId));
     }
 
+    @Override
     public Optional<Account> findActiveByMerchantIdAndCurrency(String merchantId, String currency){
         return(accountJpaRepository.findByMerchantIdAndCurrencyAndStatus
                 (merchantId,currency, Account.AccountStatus.ACTIVE));
