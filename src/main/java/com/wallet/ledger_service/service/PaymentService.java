@@ -187,6 +187,12 @@ public class PaymentService {
         if(paymentIntent.getStatus().equals(PaymentIntent.PaymentStatus.CREATED)){
             paymentIntent.transitionTo(PaymentIntent.PaymentStatus.PROCESSING);
         }
+        if (providerWebhookResult.status().equals(ProviderWebhookResult.ResultStatus.CANCELLED)) {
+            paymentIntent.transitionTo(PaymentIntent.PaymentStatus.CANCELLED);
+            jpaPaymentIntentRepository.save(paymentIntent);
+            return;
+        }
+
 
         if(providerWebhookResult.status().equals(ProviderWebhookResult.ResultStatus.FAILED)){
             paymentIntent.transitionTo(PaymentIntent.PaymentStatus.FAILED);
