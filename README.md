@@ -238,6 +238,4 @@ Integration tests validate:
 * Webhook `succeeded` credits wallet exactly once and persists final state
 * Duplicate webhook deliveries are safe due to event de-duplication and ledger uniqueness
 
-```
-::contentReference[oaicite:0]{index=0}
-```
+
