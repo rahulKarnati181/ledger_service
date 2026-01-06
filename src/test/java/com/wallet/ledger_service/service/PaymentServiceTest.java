@@ -41,8 +41,9 @@ public class PaymentServiceTest {
 
     @BeforeEach
     void setUp() {
-        paymentProvider = new MockPaymentProvider();
         objectMapper = new ObjectMapper();
+        paymentProvider = new MockPaymentProvider(objectMapper);
+
 
         paymentService = new PaymentService(
                 jpaPaymentIntentRepository,
@@ -168,9 +169,14 @@ public class PaymentServiceTest {
         String webhookPayload =
                 """
                 {
-                  "providerEventId": "evt_1",
-                  "providerPaymentId": "%s",
-                  "status": "SUCCEEDED"
+                  "id": "evt_1",
+                  "type": "payment_intent.succeeded",
+                  "data": {
+                    "object": {
+                      "id": "%s",
+                      "status": "succeeded"
+                    }
+                  }
                 }
                 """.formatted(providerPaymentId);
 

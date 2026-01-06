@@ -1,5 +1,7 @@
 package com.wallet.ledger_service.provider;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -8,41 +10,71 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-public class MockPaymentProvider implements PaymentProvider{
+public class MockPaymentProvider implements PaymentProvider {
 
-    private final Map<String ,ProviderPaymentCreationResult> idempotencyMap=new ConcurrentHashMap<>();
+    private final Map<String, ProviderPaymentCreationResult> idempotencyMap = new ConcurrentHashMap<>();
+    private final ObjectMapper objectMapper;
+
+    public MockPaymentProvider(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @Override
     public ProviderPaymentCreationResult createPayment(String idempotencyKey,
-                                                       BigDecimal amount, String currency) {
-        return(idempotencyMap.computeIfAbsent(
-                idempotencyKey,k -> new ProviderPaymentCreationResult
-                        ("mock_Id" + UUID.randomUUID()))
+                                                       BigDecimal amount,
+                                                       String currency) {
+        return idempotencyMap.computeIfAbsent(
+                idempotencyKey,
+                k -> new ProviderPaymentCreationResult("pi_" + UUID.randomUUID())
         );
-
     }
 
     @Override
     public ProviderWebhookResult interpretWebhook(String payload) {
-        String providerEventId = extract(payload, "providerEventId");
-        String providerPaymentId = extract(payload, "providerPaymentId");
-        String status = extract(payload, "status");
+        final JsonNode root;
+        try {
+            root = objectMapper.readTree(payload);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid JSON payload", e);
+        }
 
-        ProviderWebhookResult.ResultStatus resultStatus =
-                ProviderWebhookResult.ResultStatus.valueOf(status);
+        String eventId = requireText(root, "id");
+        String type = requireText(root, "type");
+        String providerPaymentId = requireText(root.at("/data/object"), "id");
+
+        if (!eventId.startsWith("evt_")) {
+            throw new IllegalArgumentException("Invalid event id: " + eventId);
+        }
+        if (!providerPaymentId.startsWith("pi_")) {
+            throw new IllegalArgumentException("Invalid payment intent id: " + providerPaymentId);
+        }
+
+        ProviderWebhookResult.ResultStatus status = mapStripeTypeToStatus(type);
 
         return new ProviderWebhookResult(
-                providerEventId,
+                eventId,
                 providerPaymentId,
-                resultStatus
+                status
         );
     }
-    private String extract(String payload, String key) {
-        // VERY naive parser for MOCK only
-        String token = "\"" + key + "\":";
-        int start = payload.indexOf(token) + token.length();
-        int firstQuote = payload.indexOf("\"", start) + 1;
-        int secondQuote = payload.indexOf("\"", firstQuote);
-        return payload.substring(firstQuote, secondQuote);
+
+    private ProviderWebhookResult.ResultStatus mapStripeTypeToStatus(String type) {
+        return switch (type) {
+            case "payment_intent.succeeded" -> ProviderWebhookResult.ResultStatus.SUCCEEDED;
+            case "payment_intent.payment_failed" -> ProviderWebhookResult.ResultStatus.FAILED;
+            case "payment_intent.canceled" -> ProviderWebhookResult.ResultStatus.CANCELLED;
+            default -> throw new IllegalArgumentException("Unhandled event type: " + type);
+        };
+    }
+
+    private static String requireText(JsonNode node, String field) {
+        if (node == null || node.isMissingNode() || node.isNull()) {
+            throw new IllegalArgumentException("Missing node for field: " + field);
+        }
+        JsonNode val = node.get(field);
+        if (val == null || val.isNull() || val.asText().isBlank()) {
+            throw new IllegalArgumentException("Missing/blank field: " + field);
+        }
+        return val.asText();
     }
 }
