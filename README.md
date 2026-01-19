@@ -6,7 +6,7 @@ Spring Boot backend that combines:
 2) A Stripe PaymentIntent shaped checkout API plus webhook ingestion
 3) Strong idempotency and exactly-once credit guarantees using Postgres constraints
 
-This project does not run real Stripe transactions. It uses a mock provider that matches Stripe’s ID formats and webhook event shape so a real provider can be swapped in without changing controller or service contracts.
+This project runs Stripe styled transactions. It uses a mock provider that matches Stripe’s ID formats and webhook event shape so a real provider can be swapped in without changing controller or service contracts.
 
 ## What this implements
 
